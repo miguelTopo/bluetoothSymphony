@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Sintetizador</string>
+    <string name="tiempo_prompt">Selección tiempo</string>
+</resources>
