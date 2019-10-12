@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     Handler bluetoothIn;
 
     // Cambiar a true cuando se vaya a trabajar con bluethoot
-    boolean enableBluetooth = false;
+    boolean enableBluetooth = true;
 
 
     final int handlerState = 0;                        //used to identify handler message
@@ -212,23 +213,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private String construirArrayNotas(List<NotaSeleccionada> notaList) {
+        if (notaList == null || notaList.isEmpty())
+            return "";
+        String result = "";
+        for (NotaSeleccionada nota : notaList) {
+            result += "[" + nota.getN() + "," + nota.getNt() + "]";
+        }
+        return result;
+    }
+
     //Método que convierte toda la información de objetos a un arreglo de String en formato json para enviarlo por meiod de Bluethoot
     private void enviarCancion() {
         if (!validoEnviarCancion())
             return;
         int tipoTiempo = getTipoTiempo();
         this.cancion.setT(tipoTiempo);
-        this.cancion.setL(this.cancion.getList().size());
+        this.cancion.setNotas(construirArrayNotas(this.cancion.getList()));
         Gson gson = new Gson();
         //Se convierte el objeto cancion en su interpretacion json correspondiente
         String json = gson.toJson(this.cancion);
         System.out.println(json);
 
+        String trama = "#" + json + "~";
+
         if (enableBluetooth) {
-            this.mConnectedThread.write(json);
+            this.mConnectedThread.write(trama);
         }
-
-
+        this.cancion = null;
+        this.cancion = new Cancion();
         this.notaRadioGroup.clearCheck();
         this.tipoNotaRadioGroup.clearCheck();
     }
@@ -278,12 +291,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onPause() {
-        super.onPause();
-        try {
-            //Don't leave Bluetooth sockets open when leaving activity
-            btSocket.close();
-        } catch (IOException e2) {
-            //insert code to deal with this
+        if (this.enableBluetooth) {
+            super.onPause();
+            try {
+                //Don't leave Bluetooth sockets open when leaving activity
+                btSocket.close();
+            } catch (IOException e2) {
+                //insert code to deal with this
+            }
         }
     }
 
